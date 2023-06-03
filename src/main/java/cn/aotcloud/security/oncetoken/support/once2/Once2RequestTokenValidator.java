@@ -3,7 +3,6 @@ package cn.aotcloud.security.oncetoken.support.once2;
 import cn.aotcloud.crypto.EncryptionProperties;
 import cn.aotcloud.crypto.pcode.PcodeEncoder;
 import cn.aotcloud.crypto.sm.SM2TextEncryptor;
-import cn.aotcloud.security.config.SgitgSafeProperties;
 import cn.aotcloud.security.oncetoken.OnceProtocol;
 import cn.aotcloud.security.oncetoken.RequestToken;
 import cn.aotcloud.security.oncetoken.RequestTokenStore;
@@ -19,10 +18,11 @@ public class Once2RequestTokenValidator extends SimpleRequestTokenValidator {
     private SM2TextEncryptor sm2TextEncryptor;
 
     public Once2RequestTokenValidator(RequestTokenStore requestTokenStore,
-                                      SgitgSafeProperties sgitgSafeProperties,
                                       PcodeEncoder pscodeEncoder,
-                                      EncryptionProperties encryptionProperties) {
-        super(requestTokenStore, sgitgSafeProperties, pscodeEncoder);
+                                      EncryptionProperties encryptionProperties,
+                                      long timeinterval,
+                                      String requestTokenSalt) {
+        super(requestTokenStore, pscodeEncoder, timeinterval, requestTokenSalt);
         this.sm2TextEncryptor = new SM2TextEncryptor(encryptionProperties);
     }
 
@@ -41,6 +41,6 @@ public class Once2RequestTokenValidator extends SimpleRequestTokenValidator {
 
     @Override
     protected String getRequestTokenAsStr(RequestToken requestTokenFromRequest) {
-        return super.getRequestTokenAsStr(requestTokenFromRequest) + "," + sgitgSafeProperties.getRequestToken().getSalt();
+        return super.getRequestTokenAsStr(requestTokenFromRequest) + "," + requestTokenSalt;
     }
 }

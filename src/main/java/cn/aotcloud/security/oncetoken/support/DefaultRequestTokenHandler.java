@@ -1,21 +1,22 @@
 package cn.aotcloud.security.oncetoken.support;
 
-import cn.aotcloud.crypto.pcode.PcodeEncoder;
-import cn.aotcloud.security.config.SgitgSafeProperties;
 import cn.aotcloud.security.oncetoken.IllegalRequestTokenException;
+import cn.aotcloud.security.oncetoken.OnceProtocol;
 import cn.aotcloud.security.oncetoken.RequestToken;
 import cn.aotcloud.security.oncetoken.RequestTokenHandler;
 import cn.aotcloud.security.oncetoken.RequestTokenParser;
 import cn.aotcloud.security.oncetoken.RequestTokenStore;
 import cn.aotcloud.security.oncetoken.RequestTokenValidator;
 import cn.aotcloud.security.oncetoken.event.IllegalRequestTokenApplicationEvent;
-import cn.aotcloud.security.oncetoken.support.simple.SimpleRequestTokenValidator;
 
+import org.apache.commons.compress.utils.Lists;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.context.ApplicationEventPublisherAware;
 import org.springframework.util.AntPathMatcher;
 import org.springframework.util.PathMatcher;
 import org.springframework.web.util.UrlPathHelper;
+
+import java.util.List;
 
 import javax.servlet.http.HttpServletRequest;
 
@@ -32,8 +33,6 @@ public class DefaultRequestTokenHandler implements RequestTokenHandler, Applicat
 
 	private RequestTokenStore requestTokenStore;
 
-	private SgitgSafeProperties sgitgSafeProperties;
-
 	private PathMatcher pathMatcher = new AntPathMatcher();
 
 	private UrlPathHelper urlPathHelper = new UrlPathHelper();
@@ -43,26 +42,23 @@ public class DefaultRequestTokenHandler implements RequestTokenHandler, Applicat
 	private RequestTokenParser requestTokenParser;
 
 	private RequestTokenValidator requestTokenValidator;
-
-	@Deprecated
+	
+	private List<OnceProtocol> supportedProtocols;
+	
+	private boolean requestTokenEnabled;
+	
+	private List<String> urls = Lists.newArrayList();
+	
 	public DefaultRequestTokenHandler(RequestTokenStore requestTokenStore,
-									  SgitgSafeProperties sgitgSafeProperties,
-									  PcodeEncoder pscodeEncoder) {
+									  RequestTokenValidator requestTokenValidator,
+									  boolean requestTokenEnabled,
+                                      List<String> urls) {
 		this.requestTokenStore = requestTokenStore;
-		this.sgitgSafeProperties = sgitgSafeProperties;
-		this.requestTokenValidator = new SimpleRequestTokenValidator(requestTokenStore, sgitgSafeProperties, pscodeEncoder);
-
-		requestTokenParser = new DelegateRequestTokenParser(sgitgSafeProperties);
-	}
-
-	public DefaultRequestTokenHandler(RequestTokenStore requestTokenStore,
-									  SgitgSafeProperties sgitgSafeProperties,
-									  RequestTokenValidator requestTokenValidator) {
-		this.requestTokenStore = requestTokenStore;
-		this.sgitgSafeProperties = sgitgSafeProperties;
 		this.requestTokenValidator = requestTokenValidator;
-
-		requestTokenParser = new DelegateRequestTokenParser(sgitgSafeProperties);
+		this.requestTokenEnabled = requestTokenEnabled;
+		this.urls.addAll(urls);
+		
+		requestTokenParser = new DelegateRequestTokenParser(supportedProtocols);
 	}
 
 	@Override
@@ -71,13 +67,12 @@ public class DefaultRequestTokenHandler implements RequestTokenHandler, Applicat
 	}
 
 	public boolean support(HttpServletRequest request) {
-		return sgitgSafeProperties.getRequestToken().isEnabled() && matchRequest(request);
+		return this.requestTokenEnabled && matchRequest(request);
 	}
 
 	protected boolean matchRequest(HttpServletRequest request) {
 		String requestUri = urlPathHelper.getLookupPathForRequest(request);
-		return sgitgSafeProperties.getRequestToken().getUrls()
-				.stream()
+		return this.urls.stream()
 				.filter(url -> pathMatcher.match(url, requestUri))
 				.findAny()
 				.isPresent();

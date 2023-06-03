@@ -1,6 +1,5 @@
 package cn.aotcloud.security.oncetoken.support;
 
-import cn.aotcloud.security.config.SgitgSafeProperties;
 import cn.aotcloud.security.oncetoken.OnceProtocol;
 import cn.aotcloud.security.oncetoken.RequestToken;
 import cn.aotcloud.security.oncetoken.RequestTokenParser;
@@ -11,6 +10,7 @@ import org.springframework.util.CollectionUtils;
 
 import javax.servlet.http.HttpServletRequest;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -20,10 +20,10 @@ public class DelegateRequestTokenParser implements RequestTokenParser {
 
 	private Map<OnceProtocol, RequestTokenParser> requestTokenParsers = new LinkedHashMap<>();
 
-	private SgitgSafeProperties sgitgSafeProperties;
+	private List<OnceProtocol> supportedProtocols;
 
-	public DelegateRequestTokenParser(SgitgSafeProperties sgitgSafeProperties) {
-		this.sgitgSafeProperties = sgitgSafeProperties;
+	public DelegateRequestTokenParser(List<OnceProtocol> supportedProtocols) {
+		this.supportedProtocols = supportedProtocols;
 
 		requestTokenParsers.put(OnceProtocol.once2, new Once2RequestTokenParser());
 		requestTokenParsers.put(OnceProtocol.simple, new SimpleRequestTokenParser());
@@ -31,7 +31,7 @@ public class DelegateRequestTokenParser implements RequestTokenParser {
 
 	@Override
 	public RequestToken parse(HttpServletRequest request) {
-		if (CollectionUtils.isEmpty(sgitgSafeProperties.getRequestToken().getSupportedProtocols())) {
+		if (CollectionUtils.isEmpty(supportedProtocols)) {
 			for (RequestTokenParser requestTokenParser : requestTokenParsers.values()) {
 				RequestToken requestToken = requestTokenParser.parse(request);
 				if (requestToken != null) {
@@ -39,7 +39,7 @@ public class DelegateRequestTokenParser implements RequestTokenParser {
 				}
 			}
 		} else {
-			for (OnceProtocol protocol : sgitgSafeProperties.getRequestToken().getSupportedProtocols()) {
+			for (OnceProtocol protocol : supportedProtocols) {
 				RequestTokenParser requestTokenParser = requestTokenParsers.get(protocol);
 				if (requestTokenParser != null) {
 					RequestToken requestToken = requestTokenParser.parse(request);

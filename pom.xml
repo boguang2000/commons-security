@@ -2,7 +2,7 @@
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>cn.aotcloud</groupId>
 	<artifactId>commons-security</artifactId>
-	<version>1.0.3</version>
+	<version>1.0.4</version>
 	<packaging>jar</packaging>
     <name>commons-security</name>
     <description>aotcloud commons-security</description>

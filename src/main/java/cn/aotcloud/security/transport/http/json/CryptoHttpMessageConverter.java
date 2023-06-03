@@ -4,6 +4,8 @@ import java.io.IOException;
 import java.util.Collections;
 import java.util.List;
 
+import javax.servlet.http.HttpServletRequest;
+
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.core.annotation.Order;
 import org.springframework.http.HttpInputMessage;
@@ -14,8 +16,11 @@ import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.http.converter.HttpMessageNotWritableException;
 import org.springframework.http.converter.StringHttpMessageConverter;
 import org.springframework.http.converter.json.MappingJackson2HttpMessageConverter;
+import org.springframework.util.AntPathMatcher;
+import org.springframework.web.util.UrlPathHelper;
 
-import cn.aotcloud.security.config.SgitgSafeProperties;
+import com.google.common.collect.Lists;
+
 import cn.aotcloud.security.transport.CryptoMediaType;
 import cn.aotcloud.security.transport.HttpCryptoSm4Certificate;
 import cn.aotcloud.security.transport.Sm4KeyHolder;
@@ -33,12 +38,21 @@ public class CryptoHttpMessageConverter extends AbstractHttpMessageConverter<Obj
 	
     private final StringHttpMessageConverter stringHttpMessageConverter = new StringHttpMessageConverter();
 
-    private SgitgSafeProperties sgitgSafeProperties;
-
-    public CryptoHttpMessageConverter(MappingJackson2HttpMessageConverter jacksonConverter ,
-    		SgitgSafeProperties sgitgSafeProperties) {
+    private AntPathMatcher antPathMatcher = new AntPathMatcher();
+    
+    private UrlPathHelper urlPathHelper = new UrlPathHelper();
+    
+    private List<String> urls = Lists.newArrayList();
+    
+    private boolean urlExclude = true;
+    
+    public CryptoHttpMessageConverter(
+    		MappingJackson2HttpMessageConverter jacksonConverter,
+    		List<String> urls,
+    		boolean urlExclude) {
     	this.jacksonConverter = jacksonConverter;
-        this.sgitgSafeProperties = sgitgSafeProperties;
+        this.urls.addAll(urls);
+        this.urlExclude = urlExclude;
     }
     
     @Override
@@ -47,10 +61,44 @@ public class CryptoHttpMessageConverter extends AbstractHttpMessageConverter<Obj
     	if (HttpRequestUtil.getHttpServletRequestFromThreadLocal() == null) {
     		return false;
     	} else {
-    		return sgitgSafeProperties.getHttpCrypto().shouldCrypto(HttpRequestUtil.getHttpServletRequestFromThreadLocal());
+    		return this.shouldCrypto(HttpRequestUtil.getHttpServletRequestFromThreadLocal());
     	}
     }
 
+    public boolean shouldCrypto(HttpServletRequest request) {
+    	String requestUri = urlPathHelper.getLookupPathForRequest(request);
+    	return shouldCrypto(requestUri);
+    }
+    
+    /**
+     * @updater ZSQ	修改支持通配符
+     * @param url
+     * @return
+     */
+    private boolean shouldCrypto(String url) {
+        if (urlExclude) {
+            return !doPtternUri(url);
+        } else {
+            return doPtternUri(url);
+        }
+    }
+    
+    /**
+     * 修改支持使用通配符过滤
+     * 
+     * @author ZSQ
+     * @param uri
+     * @return
+     */
+    private boolean doPtternUri(String uri) {
+    	for (String pattern : urls) {
+    		if(antPathMatcher.match(pattern, uri)) {
+    			return true;
+    		}
+		}
+    	return false;
+    }
+    
     @Override
     protected boolean canWrite(MediaType mediaType) {
         return true;

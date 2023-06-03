@@ -2,7 +2,6 @@ package cn.aotcloud.security.oncetoken.support.simple;
 
 import cn.aotcloud.crypto.pcode.PcodeEncoder;
 import cn.aotcloud.logger.LoggerHandle;
-import cn.aotcloud.security.config.SgitgSafeProperties;
 import cn.aotcloud.security.oncetoken.OnceProtocol;
 import cn.aotcloud.security.oncetoken.RequestToken;
 import cn.aotcloud.security.oncetoken.RequestTokenStore;
@@ -19,16 +18,21 @@ public class SimpleRequestTokenValidator implements RequestTokenValidator {
 
     protected final RequestTokenStore requestTokenStore;
 
-    protected final SgitgSafeProperties sgitgSafeProperties;
-
     protected final PcodeEncoder pscodeEncoder;
 
+    protected final long timeinterval;
+    
+    protected final String requestTokenSalt;
+    
+    // this.sgitgSafeProperties.getRequestToken().getTimeintervalSeconds() * 1000
     public SimpleRequestTokenValidator(RequestTokenStore requestTokenStore,
-                                       SgitgSafeProperties sgitgSafeProperties,
-                                       PcodeEncoder pscodeEncoder) {
+                                       PcodeEncoder pscodeEncoder,
+                                       long timeinterval,
+                                       String requestTokenSalt) {
         this.requestTokenStore = requestTokenStore;
-        this.sgitgSafeProperties = sgitgSafeProperties;
         this.pscodeEncoder = pscodeEncoder;
+        this.timeinterval = timeinterval;
+        this.requestTokenSalt = requestTokenSalt;
     }
 
     @Override
@@ -61,7 +65,6 @@ public class SimpleRequestTokenValidator implements RequestTokenValidator {
      * @return
      */
     protected boolean isValidTimestamp(Long timestamp) {
-        long timeinterval = this.sgitgSafeProperties.getRequestToken().getTimeintervalSeconds() * 1000;
         boolean flag = timestamp != null && Math.abs(System.currentTimeMillis() - timestamp) <= timeinterval;
         if (!flag) {
             logger.error("请求令牌时间戳不合法。");
