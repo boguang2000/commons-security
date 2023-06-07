@@ -121,7 +121,7 @@ public class CryptoHttpMessageConverter extends AbstractHttpMessageConverter<Obj
 
     @Override
     protected void writeInternal(Object o, HttpOutputMessage outputMessage) throws IOException, HttpMessageNotWritableException {
-//        if (!sgitgSafeProperties.getHttp()
+//        if (!safeProperties.getHttp()
 //                .getResponse()
 //                .shouldResponseCrypto(HttpRequestUtil.getHttpServletRequestFromThreadLocal().getRequestURI())) {
 //            super.write(o, CryptoMediaType.APPLICATION_JSON, outputMessage);

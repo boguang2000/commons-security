@@ -24,7 +24,7 @@ public class SimpleRequestTokenValidator implements RequestTokenValidator {
     
     protected final String requestTokenSalt;
     
-    // this.sgitgSafeProperties.getRequestToken().getTimeintervalSeconds() * 1000
+    // this.safeProperties.getRequestToken().getTimeintervalSeconds() * 1000
     public SimpleRequestTokenValidator(RequestTokenStore requestTokenStore,
                                        PcodeEncoder pscodeEncoder,
                                        long timeinterval,

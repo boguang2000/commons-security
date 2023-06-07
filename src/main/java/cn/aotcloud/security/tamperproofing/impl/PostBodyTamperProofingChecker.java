@@ -28,7 +28,7 @@ import java.util.Map;
  * import javax.servlet.ServletException; import javax.servlet.http.HttpServletR
  * 
  * import
- * com.aostarit.acloud.base.safe.filter.tamperproofing.SafeException;ST请求也使用URL查询参数。
+ * com.xxx.acloud.base.safe.filter.tamperproofing.SafeException;ST请求也使用URL查询参数。
  *
  * 将POST请求的数据封装成以下数据格式，并格式化成JSON字符串，并且JSON的KEY需要排序。
  *
